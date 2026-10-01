@@ -18,6 +18,7 @@ package org.springframework.boot.autoconfigure.web.servlet;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -35,6 +36,7 @@ import javax.validation.ValidatorFactory;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
@@ -116,6 +118,7 @@ import org.springframework.web.servlet.view.AbstractView;
 import org.springframework.web.servlet.view.ContentNegotiatingViewResolver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -480,6 +483,13 @@ class WebMvcAutoConfigurationTests {
 		this.contextRunner.withUserConfiguration(CustomConfigurableWebBindingInitializer.class).run(
 				(context) -> assertThat(context.getBean(RequestMappingHandlerAdapter.class).getWebBindingInitializer())
 						.isInstanceOf(CustomWebBindingInitializer.class));
+	}
+
+	@Test
+	void classModuleClassLoaderIsNotReadableForBinding() {
+		assumeTrue(Arrays.stream(Class.class.getMethods())
+				.anyMatch((method) -> method.getName().equals("getModule")));
+		assertThat(new BeanWrapperImpl(new Object()).isReadableProperty("class.module.classLoader")).isFalse();
 	}
 
 	@Test
